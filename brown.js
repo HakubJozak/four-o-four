@@ -11,7 +11,7 @@ Ball = function (opts) {
   this.vx = opts.vx;
   this.vy = opts.vy;
   this.r = opts.r;
-  this.m = opts.r * 10;
+  this.m = opts.r * 100;
   this.color = opts.color;
 }
 
@@ -24,53 +24,49 @@ Ball.prototype.update = function() {
   this.y += this.vy;
 }
 
-Ball.prototype.update = function(other) {
-  var dx = this.x - other.x;
-  var dy = this.y - other.y;
-  var R = this.r + other.r;
-}
 
 Ball.prototype.dist2 = function(other) {
   var dx = this.x - other.x;
   var dy= this.y - other.y;
-  return  dx*dx  + dy*dy;
+  return  dx*dx + dy*dy;
 }
 
 Ball.prototype.dist = function(other) {
-  return Math.sqrt( this.dist2());
+  return Math.sqrt( this.dist2(other));
 }
 
-
-
 Ball.prototype.v = function(other) {
-  return Math.sqrt(vx*vx + vy*vy);
+  return Math.sqrt(this.vx*this.vx + this.vy*this.vy);
 }
 
 
 // http://www.allcrunchy.com/Web_Stuff/Particle_Simulation_Toolkit/pst.js
 Ball.prototype.collide = function(other) {
   var d = this.dist(other);
-  var overlap = this.radius + other.radius - dist;
+  var overlap = this.r + other.r - d;
 
   if (overlap > 0){
     velocity = function(a,b) {
-      return (a.v() * (a.m - b.m + 2 * b.v() * b.m) / (a.m + b.m);
+      return (a.v() * (a.m - b.m) + 2 * b.v() * b.m) / (a.m + b.m);
     }
 
     var v1 = velocity(this,other);
     var v2 = velocity(other,this);
+
     var unit = { x: (other.x - this.x)/d, y: (other.y - this.y)/d }
-    var move = d / 2;
 
-    this.vx = -unit.x * s1;
-    this.vy = -unit.y * s1;
-    this.x = -unit.x * move;
-    this.y = -unit.y * move;
+    this.vx = -unit.x * v1;
+    this.vy = -unit.y * v1;
+    other.vx = unit.x * v2;
+    other.vy = unit.y * v2;
 
-    other.vx = unit.x * s2;
-    other.vy = unit.y * s2;
-    other.x = unit.x * move;
-    other.y = unit.y * move;
+    /*
+    var move = 0;
+    this.x  -= unit.x * move;
+    this.y  -= unit.y * move;
+    other.x += unit.x * move;
+    other.y += unit.y * move;
+    */
   }
 }
 
@@ -79,14 +75,15 @@ window.onload = function () {
   var canvas = window.document.getElementById('erm');
   ctx = canvas.getContext('2d');
 
-  balls = new Array();
-  balls.push( new Ball({ x: 20,  y:20, vx: 1,  vy: 0, r: 25, color: 'red' }));
-  balls.push( new Ball({ x: 120, y:20, vx: -1, vy: 0, r: 15, color: 'green' }));
-
   center = { x: canvas.width/2  - 1,
              y: canvas.height/2 - 1 }
 
-  wall = { r: 10 }
+  balls = new Array();
+  balls.push( new Ball({ x: center.x - 40.0, y:center.y, vx: 0.5127,  vy: 0.0, r: 35.0, color: 'red' }));
+  balls.push( new Ball({ x: center.x + 40.0, y:center.y, vx: -0.5, vy: 0.0, r: 15.0, color: 'green' }));
+  balls.push( new Ball({ x: center.x, y:center.y + 20, vx: -0.5, vy: 0.0, r: 15.0, color: 'green' }));
+
+  wall = { r: 160 }
 
   wall.draw = function() {
     ctx.beginPath();
@@ -100,31 +97,39 @@ window.onload = function () {
     ctx.fill();
   }
 
+  wall.collide = function(ball) {
+    var d = ball.dist(center)
+
+      if (ball.r + d > this.r) {
+        ball.vx = -ball.vx;
+        ball.vy = -ball.vy;
+      }
+  }
+
 
   step = function() {
-    for (i = 0; i < balls.length; i++) {
+    for (var i = 0; i < balls.length; i++) {
       balls[i].update();
     }
 
-
-    for (i = 0; i < balls.length; i++) {
-      for (j = 0; j < balls.length; j++) {
-        balls[i].collide(balls[j]);
+    for (var i = 0; i < balls.length; i++) {
+      for (var j = 0; j < balls.length; j++) {
+        if (i != j) {
+          balls[i].collide(balls[j]);
+        }
       }
+
+      wall.collide(balls[i]);
     }
 
-    for (i = 0; i < balls.length; i++) {
-      balls[i].draw();
-    }
-
+    // draw all
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    wall.draw();
+    for (var i = 0; i < balls.length; i++) { balls[i].draw(); }
+
     window.setTimeout(step, 10);
   }
 
-  ctx.shadowOffsetX = 2;
-  ctx.shadowOffsetY = 2;
-  ctx.shadowColor = 'gray';
-  wall.draw();
   step();
 
 
