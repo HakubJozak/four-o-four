@@ -1,3 +1,23 @@
+  function perp (a) {
+    return {
+      x: -(a.vy + 1.0) / a.vx,
+      y: 1.0
+    }
+  }
+
+  function dot (a,b) {
+    return (a.x * b.x) + (a.y  * b.y);
+  }
+
+  function size (a) {
+    return Math.sqrt((a.x * a.x) + (a.y * a.y));
+  }
+
+  function normalized (a) {
+    var s = size(a);
+    return { x: a.x / s, y: a.y / s };
+  }
+
 function   draw_circle(x,y,r,color) {
   ctx.beginPath();
   ctx.fillStyle = color;
@@ -10,7 +30,7 @@ Ball = function (opts) {
   this.y = opts.y;
   this.v = { x: opts.vx, y: opts.vy },
   this.r = opts.r;
-  this.m = Math.exp(opts.r);
+  this.m = opts.r;
   this.color = opts.color;
 }
 
@@ -34,39 +54,27 @@ Ball.prototype.dist = function(other) {
   return Math.sqrt( this.dist2(other));
 }
 
-Ball.prototype.v = function(other) {
-  return Math.sqrt(this.v.x*this.v.x + this.v.y*this.v.y);
-}
 
 
-
-// http://www.allcrunchy.com/Web_Stuff/Particle_Simulation_Toolkit/pst.js
 Ball.prototype.collide = function(other) {
   var d = this.dist(other);
   var overlap = this.r + other.r - d;
 
   if (overlap > 0){
     velocity = function(a,b) {
-      return (a.v() * (a.m - b.m) + 2 * b.v() * b.m) / (a.m + b.m);
+      var c = (size(a.v) * (a.m - b.m)) - (2 * size(b.v) * b.m);
+      return Math.abs(c) / (a.m + b.m);
     }
 
-    var v1 = velocity(this,other);
-    var v2 = velocity(other,this);
-
     var unit = { x: (other.x - this.x)/d, y: (other.y - this.y)/d }
+
+    var v1 = velocity(this, other);
+    var v2 = velocity(other, this);
 
     this.v.x = -unit.x * v1;
     this.v.y = -unit.y * v1;
     other.v.x = unit.x * v2;
     other.v.y = unit.y * v2;
-
-    /*
-    var move = 0;
-    this.x  -= unit.x * move;
-    this.y  -= unit.y * move;
-    other.x += unit.x * move;
-    other.y += unit.y * move;
-    */
   }
 }
 
@@ -81,13 +89,10 @@ window.onload = function () {
   balls = new Array();
 
 
-  balls.push( new Ball({ x: center.x - 60.0, y:center.y, vx: -0.5127,  vy: 0.2, r: 35.0, color: 'red' }));
-
-  /*
-  balls.push( new Ball({ x: center.x - 40.0, y:center.y, vx: 0.5127,  vy: 0.0, r: 35.0, color: 'red' }));
+  // balls.push( new Ball({ x: center.x - 60.0, y:center.y, vx: -0.5127,  vy: 0.2, r: 35.0, color: 'red' }));
+  balls.push( new Ball({ x: center.x - 40.0, y:center.y, vx:  0.5,  vy: 0.0, r: 30.0, color: 'red' }));
   balls.push( new Ball({ x: center.x + 40.0, y:center.y, vx: -0.5, vy: 0.0, r: 15.0, color: 'green' }));
-  balls.push( new Ball({ x: center.x, y:center.y + 20, vx: -0.5, vy: 0.0, r: 15.0, color: 'orange' }));
- */
+  //balls.push( new Ball({ x: center.x, y:center.y + 20, vx: -0.5, vy: 0.0, r: 30.0, color: 'orange' }));
 
   wall = { r: 160 }
 
@@ -102,27 +107,6 @@ window.onload = function () {
     ctx.stroke();
     ctx.fill();
   }
-
-  function perp (a) {
-    return {
-      x: -(a.vy + 1.0) / a.vx,
-      y: 1.0
-    }
-  }
-
-  function dot (a,b) {
-    return (a.x * b.x) + (a.y  * b.y);
-  }
-
-  function size (a) {
-    return Math.sqrt(a.x * a.x + a.y * a.y);
-  }
-
-  function normalized (a) {
-    var s = size(a);
-    return { x: a.x / s, y: a.y / s };
-  }
-
 
 
   wall.collide = function(ball) {
@@ -151,7 +135,7 @@ window.onload = function () {
 
 
   step = function() {
-    if (step_count < 200) {
+    if (step_count < 2100) {
       step_count++;
       window.setTimeout(step, 10);
     }
