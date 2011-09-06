@@ -8,10 +8,9 @@ function   draw_circle(x,y,r,color) {
 Ball = function (opts) {
   this.x = opts.x;
   this.y = opts.y;
-  this.vx = opts.vx;
-  this.vy = opts.vy;
+  this.v = { x: opts.vx, y: opts.vy },
   this.r = opts.r;
-  this.m = opts.r * 100;
+  this.m = Math.exp(opts.r);
   this.color = opts.color;
 }
 
@@ -20,8 +19,8 @@ Ball.prototype.draw = function() {
 }
 
 Ball.prototype.update = function() {
-  this.x += this.vx;
-  this.y += this.vy;
+  this.x += this.v.x;
+  this.y += this.v.y;
 }
 
 
@@ -36,8 +35,9 @@ Ball.prototype.dist = function(other) {
 }
 
 Ball.prototype.v = function(other) {
-  return Math.sqrt(this.vx*this.vx + this.vy*this.vy);
+  return Math.sqrt(this.v.x*this.v.x + this.v.y*this.v.y);
 }
+
 
 
 // http://www.allcrunchy.com/Web_Stuff/Particle_Simulation_Toolkit/pst.js
@@ -55,10 +55,10 @@ Ball.prototype.collide = function(other) {
 
     var unit = { x: (other.x - this.x)/d, y: (other.y - this.y)/d }
 
-    this.vx = -unit.x * v1;
-    this.vy = -unit.y * v1;
-    other.vx = unit.x * v2;
-    other.vy = unit.y * v2;
+    this.v.x = -unit.x * v1;
+    this.v.y = -unit.y * v1;
+    other.v.x = unit.x * v2;
+    other.v.y = unit.y * v2;
 
     /*
     var move = 0;
@@ -79,9 +79,15 @@ window.onload = function () {
              y: canvas.height/2 - 1 }
 
   balls = new Array();
+
+
+  balls.push( new Ball({ x: center.x - 60.0, y:center.y, vx: -0.5127,  vy: 0.2, r: 35.0, color: 'red' }));
+
+  /*
   balls.push( new Ball({ x: center.x - 40.0, y:center.y, vx: 0.5127,  vy: 0.0, r: 35.0, color: 'red' }));
   balls.push( new Ball({ x: center.x + 40.0, y:center.y, vx: -0.5, vy: 0.0, r: 15.0, color: 'green' }));
-  balls.push( new Ball({ x: center.x, y:center.y + 20, vx: -0.5, vy: 0.0, r: 15.0, color: 'green' }));
+  balls.push( new Ball({ x: center.x, y:center.y + 20, vx: -0.5, vy: 0.0, r: 15.0, color: 'orange' }));
+ */
 
   wall = { r: 160 }
 
@@ -97,17 +103,59 @@ window.onload = function () {
     ctx.fill();
   }
 
-  wall.collide = function(ball) {
-    var d = ball.dist(center)
+  function perp (a) {
+    return {
+      x: -(a.vy + 1.0) / a.vx,
+      y: 1.0
+    }
+  }
 
-      if (ball.r + d > this.r) {
-        ball.vx = -ball.vx;
-        ball.vy = -ball.vy;
+  function dot (a,b) {
+    return (a.x * b.x) + (a.y  * b.y);
+  }
+
+  function size (a) {
+    return Math.sqrt(a.x * a.x + a.y * a.y);
+  }
+
+  function normalized (a) {
+    var s = size(a);
+    return { x: a.x / s, y: a.y / s };
+  }
+
+
+
+  wall.collide = function(ball) {
+    var d = ball.dist(center);
+
+
+    if (ball.r + d > this.r) {
+      var b = ball.v;
+
+      var a = {
+        x: (ball.x - center.x),
+        y: (ball.y - center.y)
       }
+
+      a = normalized(a);
+
+      var alpha = Math.acos(dot(a,b) / size(b));
+      var beta = Math.PI - 2*alpha;
+
+      ball.v.x = b.x * Math.cos(beta) - b.y * Math.sin(beta);
+      ball.v.y = b.x * Math.sin(beta) + b.y * Math.cos(beta);
+
+      ball.update();
+    }
   }
 
 
   step = function() {
+    if (step_count < 200) {
+      step_count++;
+      window.setTimeout(step, 10);
+    }
+
     for (var i = 0; i < balls.length; i++) {
       balls[i].update();
     }
@@ -126,10 +174,9 @@ window.onload = function () {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     wall.draw();
     for (var i = 0; i < balls.length; i++) { balls[i].draw(); }
-
-    window.setTimeout(step, 10);
   }
 
+  step_count = 0;
   step();
 
 
