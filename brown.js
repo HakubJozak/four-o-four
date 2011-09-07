@@ -30,7 +30,7 @@ Ball = function (opts) {
   this.y = opts.y;
   this.v = { x: opts.vx, y: opts.vy },
   this.r = opts.r;
-  this.m = opts.r;
+  this.m = 2 * Math.PI * opts.r * opts.r;
   this.color = opts.color;
 }
 
@@ -75,8 +75,27 @@ Ball.prototype.collide = function(other) {
     this.v.y = -unit.y * v1;
     other.v.x = unit.x * v2;
     other.v.y = unit.y * v2;
+
+    this.update();
+    other.update();
   }
 }
+
+function add_balls(coords, color) {
+ for (var i = 0; i < coords.length; i++) {
+    var ball = coords[i];
+
+     console.info(i);
+
+    var C = 3.0;
+    var x = ball[0] / C;
+    var y = ball[1] / C;
+    var r = ball[2] / C;
+
+    balls.push( new Ball({ x: x, y: y, vx: 0.0, vy: 0.0, r: r, color: color }));
+  }
+}
+
 
 
 window.onload = function () {
@@ -87,12 +106,16 @@ window.onload = function () {
              y: canvas.height/2 - 1 }
 
   balls = new Array();
-
+    add_balls(ORANGE_BALLS, 'orange');
+    add_balls(GREY_BALLS, 'grey');
 
   // balls.push( new Ball({ x: center.x - 60.0, y:center.y, vx: -0.5127,  vy: 0.2, r: 35.0, color: 'red' }));
-  balls.push( new Ball({ x: center.x - 40.0, y:center.y, vx:  0.5,  vy: 0.0, r: 30.0, color: 'red' }));
-  balls.push( new Ball({ x: center.x + 40.0, y:center.y, vx: -0.5, vy: 0.0, r: 15.0, color: 'green' }));
-  //balls.push( new Ball({ x: center.x, y:center.y + 20, vx: -0.5, vy: 0.0, r: 30.0, color: 'orange' }));
+  // balls.push( new Ball({ x: center.x - 40.0, y:center.y, vx:  0.5,  vy: 0.0, r: 30.0, color: 'red' }));
+  // balls.push( new Ball({ x: center.x + 40.0, y:center.y, vx: -0.5, vy: 0.0, r: 15.0, color: 'green' }));
+  // balls.push( new Ball({ x: center.x, y:center.y + 20, vx: -0.5, vy: 0.0, r: 30.0, color: 'orange' }));
+
+
+
 
   wall = { r: 160 }
 
@@ -114,18 +137,16 @@ window.onload = function () {
 
 
     if (ball.r + d > this.r) {
+      var a = {  x: (ball.x - center.x), y: (ball.y - center.y)  };
       var b = ball.v;
 
-      var a = {
-        x: (ball.x - center.x),
-        y: (ball.y - center.y)
-      }
-
+      // normalize the axis (vector perpendicular to wall)
       a = normalized(a);
 
       var alpha = Math.acos(dot(a,b) / size(b));
       var beta = Math.PI - 2*alpha;
 
+      // rotate by beta
       ball.v.x = b.x * Math.cos(beta) - b.y * Math.sin(beta);
       ball.v.y = b.x * Math.sin(beta) + b.y * Math.cos(beta);
 
