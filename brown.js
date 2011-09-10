@@ -18,10 +18,16 @@
     return { x: a.x / s, y: a.y / s };
   }
 
+  function multiply (a, scalar) {
+    return { x: a.x * scalar, y: a.y * scalar };
+  }
+
+
 function   draw_circle(x,y,r,color) {
   ctx.beginPath();
   ctx.fillStyle = color;
   ctx.arc(x,y,r,0.0, 2 * Math.PI);
+  ctx.shadowColor = 'none';
   ctx.fill();
 }
 
@@ -84,12 +90,11 @@ Ball.prototype.collide = function(other) {
 function add_balls(coords, color) {
  for (var i = 0; i < coords.length; i++) {
     var ball = coords[i];
+    // var color = Math.floor(Math.random()*16777215).toString(16);
 
-     console.info(i);
-
-    var C = 3.0;
-    var x = ball[0] / C;
-    var y = ball[1] / C;
+    var C = 2.7;
+    var x = 50 + ball[0] / C;
+    var y = 50 + ball[1] / C;
     var r = ball[2] / C;
 
     balls.push( new Ball({ x: x, y: y, vx: 0.0, vy: 0.0, r: r, color: color }));
@@ -106,10 +111,11 @@ window.onload = function () {
              y: canvas.height/2 - 1 }
 
   balls = new Array();
-    add_balls(ORANGE_BALLS, 'orange');
-    add_balls(GREY_BALLS, 'grey');
+  //  add_balls(ORANGE_BALLS, 'orange');
+  //  add_balls (GREY_BALLS, 'grey');
+  //  balls[1].v.x = 1.5;
 
-  // balls.push( new Ball({ x: center.x - 60.0, y:center.y, vx: -0.5127,  vy: 0.2, r: 35.0, color: 'red' }));
+   balls.push( new Ball({ x: center.x - 60.0, y:center.y - 60, vx: -3.127,  vy: 0.2, r: 10.0, color: 'red' }));
   // balls.push( new Ball({ x: center.x - 40.0, y:center.y, vx:  0.5,  vy: 0.0, r: 30.0, color: 'red' }));
   // balls.push( new Ball({ x: center.x + 40.0, y:center.y, vx: -0.5, vy: 0.0, r: 15.0, color: 'green' }));
   // balls.push( new Ball({ x: center.x, y:center.y + 20, vx: -0.5, vy: 0.0, r: 30.0, color: 'orange' }));
@@ -135,10 +141,10 @@ window.onload = function () {
   wall.collide = function(ball) {
     var d = ball.dist(center);
 
-
     if (ball.r + d > this.r) {
       var a = {  x: (ball.x - center.x), y: (ball.y - center.y)  };
       var b = ball.v;
+      var old_size = size(ball.v);
 
       // normalize the axis (vector perpendicular to wall)
       a = normalized(a);
@@ -147,16 +153,24 @@ window.onload = function () {
       var beta = Math.PI - 2*alpha;
 
       // rotate by beta
-      ball.v.x = b.x * Math.cos(beta) - b.y * Math.sin(beta);
-      ball.v.y = b.x * Math.sin(beta) + b.y * Math.cos(beta);
+      after = {
+        x: b.x * Math.cos(beta) - b.y * Math.sin(beta),
+        y: b.x * Math.sin(beta) + b.y * Math.cos(beta)
+      }
 
+      // eliminate speed gain
+      if (size(after) > old_size) {
+        after = multiply(normalized(after), old_size);
+      }
+
+      ball.v = after;
       ball.update();
     }
   }
 
 
   step = function() {
-    if (step_count < 2100) {
+    if (step_count < 40) {
       step_count++;
       window.setTimeout(step, 10);
     }
@@ -184,9 +198,6 @@ window.onload = function () {
   step_count = 0;
   step();
 
-
-//  draw_circle(20,20,10, '#FF8112');
-//  draw_circle(10,20,5, '#4E4B4A');
 }
 
 
