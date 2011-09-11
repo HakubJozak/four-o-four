@@ -30,7 +30,7 @@
   }
 
 
-function   draw_circle(x,y,r,color) {
+function draw_circle(x,y,r,color) {
   ctx.beginPath();
   ctx.fillStyle = color;
   ctx.arc(x,y,r,0.0, 2 * Math.PI);
@@ -113,6 +113,7 @@ function add_balls(coords, color) {
 window.onload = function () {
   var canvas = window.document.getElementById('erm');
   ctx = canvas.getContext('2d');
+  ctx.scale (0.5,1.0);
 
   center = { x: canvas.width/2  - 1,
              y: canvas.height/2 - 1 }
@@ -134,8 +135,8 @@ window.onload = function () {
 
   wall.draw = function() {
     ctx.beginPath();
-    ctx.shadowOffsetX = 3;
-    ctx.shadowOffsetY = 3;
+    ctx.shadowOffsetX = 10;
+    ctx.shadowOffsetY = 5;
     ctx.shadowColor = 'gray';
     ctx.strokeStyle = 'black';
     ctx.fillStyle = 'white';
@@ -152,10 +153,9 @@ window.onload = function () {
     if (delta > 0) {
       var old_size = size(ball.v);
 
-      // normalize the normal vector
+      // http://en.wikipedia.org/wiki/Specular_reflection
       var di = multiply (-1.0, normalized(ball.v)) ;
       var dn = normalized ({  x: -(ball.x - center.x), y: -(ball.y - center.y)  });
-
       var ds = minus(multiply(2*dot(dn,di), dn), di);
 
       ball.v = multiply(old_size, normalized(ds));
@@ -167,7 +167,7 @@ window.onload = function () {
   step = function() {
     if (true) {
       step_count++;
-      window.setTimeout(step, 10);
+      window.setTimeout(step, 20);
     }
 
     for (var i = 0; i < balls.length; i++) {

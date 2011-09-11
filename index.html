@@ -5,16 +5,26 @@
     <script type="text/javascript" src="brown.js" ></script>
     <style type="text/css">
       html, canvas {
+        position: relative;
+        top: 70px;
         image-rendering: -moz-crisp-edges;         /* Firefox */
         -ms-interpolation-mode: nearest-neighbor;  /* IE */
+      }
+
+      .digit {
+        font-size: 400px;
+        color: gray;
+        text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.7);
       }
     </style>
   </head>
   <body>
     <center>
+      <span class="digit">4</span>
       <canvas id="erm" width="400" height="400">
         Page not found.
       </canvas>
+      <span class="digit">4</span>
     </center>
   </body>
 </html>
