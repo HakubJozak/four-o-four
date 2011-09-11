@@ -13,12 +13,19 @@
     return Math.sqrt((a.x * a.x) + (a.y * a.y));
   }
 
+  function minus (a,b) {
+    return {
+      x: a.x - b.x,
+      y: a.y - b.y
+    };
+  }
+
   function normalized (a) {
     var s = size(a);
     return { x: a.x / s, y: a.y / s };
   }
 
-  function multiply (a, scalar) {
+  function multiply (scalar,a) {
     return { x: a.x * scalar, y: a.y * scalar };
   }
 
@@ -111,11 +118,11 @@ window.onload = function () {
              y: canvas.height/2 - 1 }
 
   balls = new Array();
-  //  add_balls(ORANGE_BALLS, 'orange');
-  //  add_balls (GREY_BALLS, 'grey');
-  //  balls[1].v.x = 1.5;
+  add_balls(ORANGE_BALLS, 'orange');
+  add_balls (GREY_BALLS, 'grey');
+  balls[1].v.x = 1.5;
 
-   balls.push( new Ball({ x: center.x - 60.0, y:center.y - 60, vx: -3.127,  vy: 0.2, r: 10.0, color: 'red' }));
+  // balls.push( new Ball({ x: center.x - 60.0, y:center.y - 60, vx: -3.127,  vy: 0.2, r: 10.0, color: 'red' }));
   // balls.push( new Ball({ x: center.x - 40.0, y:center.y, vx:  0.5,  vy: 0.0, r: 30.0, color: 'red' }));
   // balls.push( new Ball({ x: center.x + 40.0, y:center.y, vx: -0.5, vy: 0.0, r: 15.0, color: 'green' }));
   // balls.push( new Ball({ x: center.x, y:center.y + 20, vx: -0.5, vy: 0.0, r: 30.0, color: 'orange' }));
@@ -140,37 +147,25 @@ window.onload = function () {
 
   wall.collide = function(ball) {
     var d = ball.dist(center);
+    var delta = ball.r + d - this.r;
 
-    if (ball.r + d > this.r) {
-      var a = {  x: (ball.x - center.x), y: (ball.y - center.y)  };
-      var b = ball.v;
+    if (delta > 0) {
       var old_size = size(ball.v);
 
-      // normalize the axis (vector perpendicular to wall)
-      a = normalized(a);
+      // normalize the normal vector
+      var di = multiply (-1.0, normalized(ball.v)) ;
+      var dn = normalized ({  x: -(ball.x - center.x), y: -(ball.y - center.y)  });
 
-      var alpha = Math.acos(dot(a,b) / size(b));
-      var beta = Math.PI - 2*alpha;
+      var ds = minus(multiply(2*dot(dn,di), dn), di);
 
-      // rotate by beta
-      after = {
-        x: b.x * Math.cos(beta) - b.y * Math.sin(beta),
-        y: b.x * Math.sin(beta) + b.y * Math.cos(beta)
-      }
-
-      // eliminate speed gain
-      if (size(after) > old_size) {
-        after = multiply(normalized(after), old_size);
-      }
-
-      ball.v = after;
+      ball.v = multiply(old_size, normalized(ds));
       ball.update();
     }
   }
 
 
   step = function() {
-    if (step_count < 40) {
+    if (true) {
       step_count++;
       window.setTimeout(step, 10);
     }
