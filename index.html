@@ -1,10 +1,257 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <script type="text/javascript" src="coords.js" ></script>
-    <script type="text/javascript" src="brown.js" ></script>
+    <script type="text/javascript" >
+ORANGE = [[535.54303,     310.58942,     35.149006],
+          [254.351,     292.69537,     62.629139],
+          [481.86093,     483.13907,     71.576157]];
+
+GREY = [[667.19208,     158.49007,     29.39735],
+             [478.02649,     218.56291,     33.231789],
+             [594.33777,     213.45033,     33.231789],
+             [720.87415,     230.06622,     28.119205],
+[734.93378,     318.25827,     19.172186],
+[633.96027,     295.25165,     28.119205],
+// [724.70862,     409.00662,     37.066227]];
+[365.54968,     39.622517,     29.39735],
+// [435.84769,     28.119205,     14.059603]]
+[521.48346,     54.960266,     29.39735],
+[594.33777,     90.748344,     17.894039],
+[466.52319,     102.25166,     21.728477],
+[555.99341,     141.87418,     19.172186],
+[383.4437,     123.98013,     19.172186],
+[283.74835,     159.76822,     30.675497],
+[364.91058,     276.07947,     28.758278],
+[444.79471,     335.51324,     27.480133],
+[198.75166,     77.327812,     26.841059],
+[271.60596,     38.983444,     19.811258],
+[129.73178,     132.92715,     30.675497],
+[169.35431,     198.75165,     18.533113],
+[127.1755,     258.82449,     10.864239],
+[75.410599,     203.22516,     15.976821],
+[49.208611,     276.07947,     19.172186],
+[38.344372,     373.21854,     44.7351],
+[131.649,     356.60266,     26.841059],
+[214.0894,     400.0596,     25.562914],
+[301.00333,     440.3212,     33.870861],
+[364.27151,     389.19537,     22.36755],
+[554.07617,     384.08279,     15.337749],
+[617.34436,     389.83444,     28.119205],
+[632.04303,     484.41721,     31.314569],
+[697.86755,     576.44373,     37.705299],
+[589.86426,     572.60925,     23.645695],
+[502.95032,     635.2384,     31.314569],
+[555.35431,     705.53644,     26.201986],
+[623.73511,     663.3576,     15.976821],
+[718.31787,     502.31125,     14.059603],
+[352.12915,     543.85101,     16.615894],
+[403.89404,     597.53314,     30.036425],
+[401.97681,     677.41724,     28.119205],
+[452.46356,     745.15894,     24.284769],
+[336.79138,     739.40729,     31.953642],
+[317.6192,     602.00665,     31.314569],
+[226.87086,     590.5033,     30.036425],
+[210.89404,     493.36423,     20.450331],
+[143.7914,     447.99005,     14.059603],
+[59.433773,     492.72516,     31.314569],
+[104.16888,     582.83441,     28.119205],
+[150.18211,     663.3576,     19.811258],
+[246.04305,     699.78479,     34.509933],
+[368.74503,     189.16556,     19.811258]];
+
+
+  function dot (a,b) {
+    return (a.x * b.x) + (a.y  * b.y);
+  }
+
+  function size(a) {
+    return Math.sqrt((a.x * a.x) + (a.y * a.y));
+  }
+
+  function minus (a,b) {
+    return {
+      x: a.x - b.x,
+      y: a.y - b.y
+    };
+  }
+
+  function normalized (a) {
+    var s = size(a);
+    return { x: a.x / s, y: a.y / s };
+  }
+
+  function multiply (scalar,a) {
+    return { x: a.x * scalar, y: a.y * scalar };
+  }
+
+
+function draw_circle(x,y,r,color) {
+  ctx.beginPath();
+  ctx.fillStyle = color;
+  ctx.arc(x,y,r,0.0, 2 * Math.PI);
+  ctx.shadowColor = 'black';
+  ctx.shadowOffsetX= 1;
+  ctx.shadowOffsetY= 1;
+  ctx.fill();
+}
+
+Ball = function (opts) {
+  this.x = opts.x;
+  this.y = opts.y;
+  this.v = { x: opts.vx, y: opts.vy },
+  this.r = opts.r;
+  this.m = 2 * Math.PI * opts.r * opts.r;
+  this.color = opts.color;
+}
+
+Ball.prototype.draw = function() {
+  draw_circle(this.x, this.y, this.r, this.color);
+}
+
+Ball.prototype.update = function() {
+  this.x += this.v.x;
+  this.y += this.v.y;
+}
+
+
+Ball.prototype.dist2 = function(other) {
+  var dx = this.x - other.x;
+  var dy= this.y - other.y;
+  return  dx*dx + dy*dy;
+}
+
+Ball.prototype.dist = function(other) {
+  return Math.sqrt( this.dist2(other));
+}
+
+
+
+Ball.prototype.collide = function(other) {
+  var d = this.dist(other);
+  var overlap = this.r + other.r - d;
+
+  if (overlap > 0){
+    velocity = function(a,b) {
+      var c = (size(a.v) * (a.m - b.m)) - (2 * size(b.v) * b.m);
+      return Math.abs(c) / (a.m + b.m);
+    }
+
+    var unit = { x: (other.x - this.x)/d, y: (other.y - this.y)/d }
+
+    var v1 = velocity(this, other);
+    var v2 = velocity(other, this);
+
+    this.v.x = -unit.x * v1;
+    this.v.y = -unit.y * v1;
+    other.v.x = unit.x * v2;
+    other.v.y = unit.y * v2;
+
+    this.update();
+    other.update();
+  }
+}
+
+function add_balls(coords, color) {
+ for (var i = 0; i < coords.length; i++) {
+    var ball = coords[i];
+    // var color = Math.floor(Math.random()*16777215).toString(16);
+
+    var C = 2.7;
+    var x = 50 + ball[0] / C;
+    var y = 50 + ball[1] / C;
+    var r = ball[2] / C;
+
+    balls.push( new Ball({ x: x, y: y, vx: 0.0, vy: 0.0, r: r, color: color }));
+  }
+}
+
+
+
+window.onload = function () {
+  var canvas = window.document.getElementById('erm');
+  ctx = canvas.getContext('2d');
+    ctx.scale (1.0,1.0);
+
+  center = { x: canvas.width/2  - 1,
+             y: canvas.height/2 - 1 }
+
+  balls = new Array();
+  add_balls(ORANGE, 'orange');
+  add_balls(GREY, 'grey');
+  balls[1].v.x = 1.5;
+
+  // balls.push( new Ball({ x: center.x - 60.0, y:center.y - 60, vx: -3.127,  vy: 0.2, r: 10.0, color: 'red' }));
+  // balls.push( new Ball({ x: center.x - 40.0, y:center.y, vx:  0.5,  vy: 0.0, r: 30.0, color: 'red' }));
+  // balls.push( new Ball({ x: center.x + 40.0, y:center.y, vx: -0.5, vy: 0.0, r: 15.0, color: 'green' }));
+  // balls.push( new Ball({ x: center.x, y:center.y + 20, vx: -0.5, vy: 0.0, r: 30.0, color: 'orange' }));
+
+  wall = { r: 160 }
+
+  wall.draw = function() {
+    ctx.beginPath();
+    ctx.shadowOffsetX = 3;
+    ctx.shadowOffsetY = 3;
+    ctx.shadowColor = 'black';
+    ctx.strokeStyle = 'black';
+    ctx.fillStyle = 'white';
+    ctx.arc(center.x, center.y, wall.r,0.0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.fill();
+  }
+
+
+  wall.collide = function(ball) {
+    var d = ball.dist(center);
+    var delta = ball.r + d - this.r;
+
+    if (delta > 0) {
+      var old_size = size(ball.v);
+
+      // http://en.wikipedia.org/wiki/Specular_reflection
+      var di = multiply (-1.0, normalized(ball.v)) ;
+      var dn = normalized ({  x: -(ball.x - center.x), y: -(ball.y - center.y)  });
+      var ds = minus(multiply(2*dot(dn,di), dn), di);
+
+      ball.v = multiply(old_size, normalized(ds));
+      ball.update();
+    }
+  }
+
+
+  tick = function() {
+    if (true) {
+      tick_count++;
+      window.setTimeout(tick, 20);
+    }
+
+    for (var i = 0; i < balls.length; i++) {
+      balls[i].update();
+    }
+
+    for (var i = 0; i < balls.length; i++) {
+      for (var j = 0; j < balls.length; j++) {
+        if (i != j) {
+          balls[i].collide(balls[j]);
+        }
+      }
+
+      wall.collide(balls[i]);
+    }
+
+    // draw all
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    wall.draw();
+    for (var i = 0; i < balls.length; i++) { balls[i].draw(); }
+  }
+
+  tick_count = 0;
+  tick();
+
+}
+    </script>
     <style type="text/css">
       html, canvas {
+        background-color: gray;
         position: relative;
         top: 70px;
         image-rendering: -moz-crisp-edges;         /* Firefox */
@@ -13,18 +260,19 @@
 
       .digit {
         font-size: 400px;
-        color: gray;
-        text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.7);
+        color: white;
+        text-shadow: 2px 2px 0 black; // rgba(255, 255, 255, 0.7);
+        //text-shadow: red 22px 2px 1px;
       }
     </style>
   </head>
   <body>
     <center>
-      <span class="digit">4</span>
+      <!-- <span class="digit">4</span> -->
+
       <canvas id="erm" width="400" height="400">
         Page not found.
       </canvas>
-      <span class="digit">4</span>
     </center>
   </body>
 </html>
